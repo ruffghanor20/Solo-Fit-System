@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Solo Fit V5 — System</title>
+  <style>
+    :root{
+      --bg:#070a12;
+      --line:#1c2a4d;
+      --txt:#eaf1ff;
+      --muted:#a9b7d6;
+      --good:#43f2b2;
+      --warn:#ffd36f;
+      --bad:#ff6b7a;
+      --cyan:#74e6ff;
+      --blue:#6aa6ff;
+      --violet:#a78bfa;
+      --gold:#ffd27a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 650px at 18% 0%, rgba(87,130,255,.22), transparent 55%),
+        radial-gradient(900px 600px at 85% 18%, rgba(116,230,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 50% 110%, rgba(167,139,250,.12), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: color-mix(in srgb, var(--bg) 75%, transparent);
+      border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    .top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+    .brand{display:flex; flex-direction:column; gap:2px;}
+    .brand h1{margin:0; font-size:16px; letter-spacing:.8px; text-transform:uppercase;}
+    .brand .sub{font-size:12px; color:var(--muted);}
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color:var(--muted);
+      display:inline-flex; gap:8px; align-items:center;
+    }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; padding:14px 16px 20px}
+    @media(max-width: 920px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px;
+      border-bottom:1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(116,230,255,.08), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .card .bd{padding:14px}
+    .rank{
+      font-weight:800;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--violet));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      letter-spacing:.6px;
+    }
+    .big{font-size:22px}
+    .stats{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px}
+    @media(max-width: 720px){ .stats{grid-template-columns: repeat(2, 1fr)} }
+    .stat{border:1px solid var(--line); border-radius:14px; background: rgba(0,0,0,.18); padding:10px;}
+    .k{font-size:11px; color:var(--muted)}
+    .v{margin-top:6px; font-size:15px}
+    .v.good{color:var(--good)}
+    .v.warn{color:var(--warn)}
+    .bar{height:12px; border:1px solid var(--line); border-radius:999px; overflow:hidden; background: rgba(255,255,255,.06)}
+    .fill{height:100%; width:0%}
+    .fill.xp{background: linear-gradient(90deg, var(--cyan), var(--blue))}
+    .fill.debt{background: linear-gradient(90deg, var(--bad), var(--warn))}
+    button{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--txt);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+    }
+    button:hover{border-color: color-mix(in srgb, var(--blue) 55%, var(--line))}
+    button.danger:hover{border-color: color-mix(in srgb, var(--bad) 65%, var(--line))}
+    button:disabled{opacity:.55; cursor:not-allowed;}
+    .btnrow{display:flex; flex-wrap:wrap; gap:10px}
+    .tasks{display:flex; flex-direction:column; gap:10px}
+    .task{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: rgba(0,0,0,.18);
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .task.done{
+      border-color: color-mix(in srgb, var(--good) 45%, var(--line));
+      background: rgba(67,242,178,.07);
+    }
+    .left{display:flex; align-items:center; gap:10px}
+    input[type="checkbox"]{width:18px; height:18px}
+    .name{font-size:14px}
+    .xp{font-size:12px; color:var(--muted)}
+    .tag{
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      font-size:12px; color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.7px;
+    }
+    .log{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+      padding:10px;
+      max-height:320px;
+      overflow:auto;
+      white-space:pre-wrap;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .auth{display:grid; gap:10px;}
+    .auth input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--txt);
+      outline:none;
+    }
+    .split{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media(max-width: 520px){ .split{grid-template-columns:1fr} }
+    .hint{font-size:12px; color:var(--muted)}
+    .gold{color:var(--gold)}
+
+    .panel2{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: rgba(0,0,0,.18);
+      padding:12px;
+    }
+    .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+    .avatar{
+      width:72px; height:72px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      overflow:hidden;
+      display:grid; place-items:center;
+    }
+    .avatar img{width:100%; height:100%; object-fit:cover; display:none;}
+    .avatar .empty{font-size:11px; color:var(--muted); text-align:center; padding:8px;}
+    .miniInput{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--txt);
+      outline:none;
+      width: 100%;
+    }
+    .miniSelect{
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--txt);
+      outline:none;
+    }
+    .cmRow, .invItem, .storeItem{
+      display:flex; justify-content:space-between; gap:10px; align-items:center;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.16);
+      padding:10px;
+    }
+    .cmLeft{display:flex; flex-direction:column; gap:2px;}
+    .cmName{font-size:13px;}
+    .cmMeta{font-size:11px; color:var(--muted);}
+    .cmRight{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    .cmToggle{display:flex; gap:6px; align-items:center; color:var(--muted); font-size:12px;}
+
+    .hr{height:1px; background: var(--line); opacity:.9; margin:12px 0;}
+
+    .attrs{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media(max-width: 520px){ .attrs{grid-template-columns:1fr} }
+    .attr{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.16);
+      padding:10px;
+    }
+    .attrTop{display:flex; justify-content:space-between; gap:10px;}
+    .attrName{font-size:12px; color:var(--muted); letter-spacing:.8px;}
+    .attrVal{font-size:14px;}
+    .attrBar{height:10px; border:1px solid var(--line); border-radius:999px; overflow:hidden; background: rgba(255,255,255,.06); margin-top:8px;}
+    .attrFill{height:100%; width:0%; background: linear-gradient(90deg, var(--violet), var(--blue));}
+
+    /* Inventory / Store / Equipment icon helpers */
+    .iimg{width:28px;height:28px;border-radius:10px;object-fit:cover;display:block}
+    .iemoji{font-size:20px;line-height:1}
+    .invLeft{display:flex;gap:10px;align-items:center;min-width:0}
+    .invRight{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .invIcon{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);flex:0 0 auto}
+    .invText{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .invName{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .invMeta{font-size:11px}
+    .storeLeft{display:flex;gap:10px;align-items:center;min-width:0}
+    .storeRight{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .storeIcon{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);flex:0 0 auto}
+    .storeText{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .storeName{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .storeDesc{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52ch}
+
+    .eqGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    @media(max-width: 520px){ .eqGrid{grid-template-columns:1fr} }
+    .eqSlot{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.16);
+      padding:10px;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .eqSlotTitle{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .eqSlotName{font-size:12px;color:var(--muted);letter-spacing:.8px}
+    .eqEmpty{color:var(--muted);padding:6px 0}
+    .eqRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .eqLeft{display:flex;gap:10px;align-items:center;min-width:0}
+    .eqIcon{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.18);flex:0 0 auto}
+    .eqMeta{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .eqName{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .eqBtn{padding:8px 10px;border-radius:12px}
+
+    /* TOAST */
+    #toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      z-index: 9999;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.55);
+      padding:10px 14px;
+      border-radius:14px;
+      color: var(--txt);
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      max-width: 90vw;
+      text-align:center;
+    }
+    #toast.show{ opacity: 1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <h1>SOLO FIT <span class="rank">SYSTEM</span></h1>
+      <div class="sub">V5</div>
+    </div>
+    <div class="pill mono" id="topPill">offline</div>
+  </div>
+</header>
+
+<div class="wrap grid">
+  <!-- LEFT / PROFILE -->
+  <section class="card">
+    <div class="hd">
+      <div>
+        <div class="mono" id="who">—</div>
+        <div class="hint" id="dateLine">—</div>
+      </div>
+      <div class="pill mono">Rank: <span class="rank" id="rank">E</span> • <span class="gold" id="title">Novato</span></div>
+    </div>
+
+    <div class="bd">
+      <!-- Avatar + Coins -->
+      <div class="panel2">
+        <div class="row">
+          <div class="avatar">
+            <img id="avatarImg" alt="Avatar"/>
+            <div class="empty" id="avatarEmpty">SEM<br/>FOTO</div>
+          </div>
+
+          <div style="flex:1; min-width:240px;">
+            <div class="k">Moedas</div>
+            <div class="v big mono" id="coinsTotal">0 💰</div>
+            <div class="hint mono" id="coinsToday">+0 moedas</div>
+          </div>
+
+          <div style="min-width:220px;">
+            <div class="k">Foto do usuário</div>
+            <input id="avatarFile" type="file" accept="image/*" class="miniInput"/>
+            <div class="hint">A foto fica salva offline.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- Attributes -->
+      <div class="panel2">
+        <div class="mono">ATRIBUTOS</div>
+        <div class="hint">Cada missão aumenta 1 atributo. Ao chegar em 20, ganha +250 XP (uma vez por atributo).</div>
+
+        <div class="attrs" style="margin-top:10px;">
+          <div class="attr">
+            <div class="attrTop">
+              <div class="attrName mono">FORÇA</div>
+              <div class="attrVal mono"><span id="attr_str">1</span></div>
+            </div>
+            <div class="attrBar"><div class="attrFill" id="attrbar_str"></div></div>
+          </div>
+
+          <div class="attr">
+            <div class="attrTop">
+              <div class="attrName mono">DESTREZA</div>
+              <div class="attrVal mono"><span id="attr_dex">1</span></div>
+            </div>
+            <div class="attrBar"><div class="attrFill" id="attrbar_dex"></div></div>
+          </div>
+
+          <div class="attr">
+            <div class="attrTop">
+              <div class="attrName mono">CONSTITUIÇÃO</div>
+              <div class="attrVal mono"><span id="attr_con">1</span></div>
+            </div>
+            <div class="attrBar"><div class="attrFill" id="attrbar_con"></div></div>
+          </div>
+
+          <div class="attr">
+            <div class="attrTop">
+              <div class="attrName mono">INTELIGÊNCIA</div>
+              <div class="attrVal mono"><span id="attr_int">1</span></div>
+            </div>
+            <div class="attrBar"><div class="attrFill" id="attrbar_int"></div></div>
+          </div>
+
+          <div class="attr">
+            <div class="attrTop">
+              <div class="attrName mono">CARISMA</div>
+              <div class="attrVal mono"><span id="attr_cha">1</span></div>
+            </div>
+            <div class="attrBar"><div class="attrFill" id="attrbar_cha"></div></div>
+          </div>
+        </div>
+
+        <div class="hint mono" style="margin-top:10px" id="bonusLine"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- Equipment -->
+      <div class="panel2">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div class="mono">EQUIPAMENTO</div>
+            <div class="hint">Equipe itens do inventário para bônus passivos (XP/atributos).</div>
+          </div>
+          <div class="pill mono" id="setBonusLine">SET: inativo</div>
+        </div>
+
+        <div class="eqGrid">
+          <div class="eqSlot">
+            <div class="eqSlotTitle">
+              <div class="eqSlotName mono">CABEÇA</div>
+            </div>
+            <div id="eq_head"></div>
+          </div>
+
+          <div class="eqSlot">
+            <div class="eqSlotTitle">
+              <div class="eqSlotName mono">PEITO</div>
+            </div>
+            <div id="eq_chest"></div>
+          </div>
+
+          <div class="eqSlot">
+            <div class="eqSlotTitle">
+              <div class="eqSlotName mono">BRAÇOS</div>
+            </div>
+            <div id="eq_arms"></div>
+          </div>
+
+          <div class="eqSlot">
+            <div class="eqSlotTitle">
+              <div class="eqSlotName mono">PERNAS</div>
+            </div>
+            <div id="eq_legs"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- Level / XP -->
+      <div class="split" style="margin-top:12px">
+        <div>
+          <div class="k">Nível</div>
+          <div class="v big mono"><span class="rank" id="level">1</span> <span class="hint">/ 999</span></div>
+        </div>
+        <div>
+          <div class="k">XP Total</div>
+          <div class="v big mono" id="xpTotal">0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="k">XP para o próximo nível</div>
+        <div class="bar" style="margin-top:6px"><div class="fill xp" id="xpFill"></div></div>
+        <div class="hint mono" style="margin-top:6px" id="xpLine">0 / 100</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="k">Dívida de XP</div>
+        <div class="bar" style="margin-top:6px"><div class="fill debt" id="debtFill"></div></div>
+        <div class="hint mono" style="margin-top:6px" id="debtLine">0 XP</div>
+      </div>
+
+      <div class="stats" style="margin-top:12px">
+        <div class="stat">
+          <div class="k">XP Hoje</div>
+          <div class="v good mono" id="xpToday">+0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Missões (hoje)</div>
+          <div class="v mono" id="doneCount">0 / 0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Academia (semana)</div>
+          <div class="v mono" id="gymWeek">0 / 5</div>
+        </div>
+        <div class="stat">
+          <div class="k">Bônus semanal</div>
+          <div class="v warn mono" id="weekly">Pendente</div>
+        </div>
+      </div>
+
+      <div class="btnrow" style="margin-top:12px">
+        <button id="claimBtn">Reivindicar bônus semanal</button>
+        <button id="invUpBtn" type="button">Upgrade inventário</button>
+        <button id="logoutBtn" class="danger">Sair</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- Inventory -->
+      <div class="panel2">
+        <div class="mono">INVENTÁRIO</div>
+        <div class="hint">Slots: <span class="mono" id="invCap">0/15</span></div>
+
+        <div class="row" style="margin-top:10px;">
+          <input id="invName" class="miniInput" placeholder="Nome do item (ex.: Whey, Creatina, Garrafa...)"/>
+          <button id="invAddBtn" type="button">Adicionar item</button>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="k">Foto para virar ícone (opcional)</div>
+          <input id="invPhoto" type="file" accept="image/*" capture="environment" class="miniInput"/>
+          <div class="hint">No Android abre câmera/galeria. Em PC abre o arquivo.</div>
+        </div>
+
+        <div id="invList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+        <div class="hint" style="margin-top:8px">
+          Upgrades: 20=50 • 25=75 • 30=100 • depois +5 slots custa +25 (até 100).
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- Store -->
+      <div class="panel2">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div class="mono">LOJA</div>
+            <div class="hint">Compre poções, itens e equipamentos com suas moedas.</div>
+          </div>
+        </div>
+        <div id="storeList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT / MISSIONS -->
+  <section class="card">
+    <div class="hd">
+      <div>
+        <div class="mono">MISSÕES DO DIA</div>
+        <div class="hint" id="dayType">—</div>
+      </div>
+      <div class="pill mono" id="weekKeyPill">—</div>
+    </div>
+
+    <div class="bd">
+      <div id="authBox" class="auth">
+        <div class="hint">Crie um usuário local. Depois faça login.</div>
+        <input id="username" placeholder="Usuário" autocomplete="username" />
+        <input id="password" type="password" placeholder="Senha" autocomplete="current-password" />
+        <div class="btnrow">
+          <button id="registerBtn">Registrar</button>
+          <button id="loginBtn">Login</button>
+        </div>
+        <div class="hint mono" id="authMsg"></div>
+      </div>
+
+      <div id="gameBox" style="display:none">
+        <div class="panel2">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="mono">MISSÕES CUSTOM</div>
+              <div class="hint">Até 20. “DAILY” repete todo dia. Você escolhe qual atributo evolui.</div>
+            </div>
+            <div class="pill mono">Qtd: <span id="customCount">0/20</span></div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <input id="customName" class="miniInput" placeholder="Nome da missão (XP fixo 15, +5 moedas)"/>
+            <select id="customAttr" class="miniSelect mono"></select>
+            <label class="cmToggle mono"><input id="customDaily" type="checkbox" checked/> DAILY</label>
+            <button id="customAddBtn" type="button">Adicionar</button>
+          </div>
+
+          <div id="customList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="tasks" id="tasks"></div>
+
+        <div style="margin-top:14px" class="mono">LOG</div>
+        <div class="log mono" id="log"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="toast" class="mono"></div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
