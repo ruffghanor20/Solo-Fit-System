@@ -37,6 +37,11 @@
       border-bottom:1px solid var(--line);
     }
     .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    .viewMenu{display:none; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .viewMenu button.active{border-color:color-mix(in srgb, var(--cyan) 60%, var(--line)); background:rgba(116,230,255,.12)}
+    .storeSubMenu{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .storeSubMenu button.active{border-color:color-mix(in srgb, var(--violet) 60%, var(--line)); background:rgba(167,139,250,.12)}
+    .viewHidden{display:none !important}
     .top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
     .brand{display:flex; flex-direction:column; gap:2px;}
     .brand h1{margin:0; font-size:16px; letter-spacing:.8px; text-transform:uppercase;}
@@ -275,19 +280,25 @@
 </head>
 <body>
 
-<header>
-  <div class="wrap top">
+<header>␊
+  <div class="wrap top">␊
     <div class="brand">
       <h1>SOLO FIT <span class="rank">SYSTEM</span></h1>
       <div class="sub">V5</div>
     </div>
     <div class="pill mono" id="topPill">offline</div>
+    <div class="viewMenu" id="viewMenu">
+      <button type="button" data-view="main">Tela principal</button>
+      <button type="button" data-view="store">Loja</button>
+      <button type="button" data-view="missions">Missões</button>
+      <button type="button" data-view="settings">Configurações</button>
+    </div>
   </div>
 </header>
 
 <div class="wrap grid">
   <!-- LEFT / PROFILE -->
-  <section class="card">
+  <section class="card" id="leftCard">
     <div class="hd">
       <div>
         <div class="mono" id="who">—</div>
@@ -298,7 +309,7 @@
 
     <div class="bd">
       <!-- Avatar + Coins -->
-      <div class="panel2">
+      <div class="panel2 appViewBlock" data-view-block="main">
         <div class="row">
           <div class="avatar">
             <img id="avatarImg" alt="Avatar"/>
@@ -322,7 +333,7 @@
       <div class="hr"></div>
 
       <!-- Attributes -->
-      <div class="panel2">
+      <div class="panel2 appViewBlock" data-view-block="main">
         <div class="mono">ATRIBUTOS</div>
         <div class="hint">Cada missão aumenta 1 atributo. Ao chegar em 20, ganha +250 XP (uma vez por atributo).</div>
 
@@ -348,7 +359,7 @@
               <div class="attrName mono">CONSTITUIÇÃO</div>
               <div class="attrVal mono"><span id="attr_con">1</span></div>
             </div>
-            <div class="attrBar"><div class="attrFill" id="attrbar_con"></div></div>
+@@ -352,213 +363,218 @@
           </div>
 
           <div class="attr">
@@ -374,7 +385,7 @@
       <div class="hr"></div>
 
       <!-- Equipment -->
-      <div class="panel2">
+      <div class="panel2 appViewBlock" data-view-block="main">
         <div class="row" style="justify-content:space-between;">
           <div>
             <div class="mono">EQUIPAMENTO</div>
@@ -417,7 +428,7 @@
       <div class="hr"></div>
 
       <!-- Level / XP -->
-      <div class="split" style="margin-top:12px">
+      <div class="split appViewBlock" data-view-block="main" style="margin-top:12px">
         <div>
           <div class="k">Nível</div>
           <div class="v big mono"><span class="rank" id="level">1</span> <span class="hint">/ 999</span></div>
@@ -428,19 +439,19 @@
         </div>
       </div>
 
-      <div style="margin-top:12px">
+      <div class="appViewBlock" data-view-block="main" style="margin-top:12px">
         <div class="k">XP para o próximo nível</div>
         <div class="bar" style="margin-top:6px"><div class="fill xp" id="xpFill"></div></div>
         <div class="hint mono" style="margin-top:6px" id="xpLine">0 / 100</div>
       </div>
 
-      <div style="margin-top:12px">
+      <div class="appViewBlock" data-view-block="main" style="margin-top:12px">
         <div class="k">Dívida de XP</div>
         <div class="bar" style="margin-top:6px"><div class="fill debt" id="debtFill"></div></div>
         <div class="hint mono" style="margin-top:6px" id="debtLine">0 XP</div>
       </div>
 
-      <div class="stats" style="margin-top:12px">
+      <div class="stats appViewBlock" data-view-block="main" style="margin-top:12px">
         <div class="stat">
           <div class="k">XP Hoje</div>
           <div class="v good mono" id="xpToday">+0</div>
@@ -459,7 +470,7 @@
         </div>
       </div>
 
-      <div class="btnrow" style="margin-top:12px">
+      <div class="btnrow appViewBlock" data-view-block="main" style="margin-top:12px">
         <button id="claimBtn">Reivindicar bônus semanal</button>
         <button id="invUpBtn" type="button">Upgrade inventário</button>
         <button id="logoutBtn" class="danger">Sair</button>
@@ -468,7 +479,7 @@
       <div class="hr"></div>
 
       <!-- Inventory -->
-      <div class="panel2">
+      <div class="panel2 appViewBlock" data-view-block="store">
         <div class="mono">INVENTÁRIO</div>
         <div class="hint">Slots: <span class="mono" id="invCap">0/15</span></div>
 
@@ -492,11 +503,16 @@
       <div class="hr"></div>
 
       <!-- Store -->
-      <div class="panel2">
+      <div class="panel2 appViewBlock" data-view-block="store">
         <div class="row" style="justify-content:space-between;">
           <div>
             <div class="mono">LOJA</div>
             <div class="hint">Compre poções, itens e equipamentos com suas moedas.</div>
+            <div class="storeSubMenu" id="storeSubMenu">
+              <button type="button" data-store-filter="all">Tudo</button>
+              <button type="button" data-store-filter="consumables">Poções/Itens</button>
+              <button type="button" data-store-filter="equip">Equipamentos</button>
+            </div>
           </div>
         </div>
         <div id="storeList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
@@ -505,7 +521,7 @@
   </section>
 
   <!-- RIGHT / MISSIONS -->
-  <section class="card">
+  <section class="card" id="rightCard">
     <div class="hd">
       <div>
         <div class="mono">MISSÕES DO DIA</div>
@@ -527,7 +543,7 @@
       </div>
 
       <div id="gameBox" style="display:none">
-        <div class="panel2">
+        <div class="panel2 appViewBlock" data-view-block="missions">
           <div class="row" style="justify-content:space-between;">
             <div>
               <div class="mono">MISSÕES CUSTOM</div>
@@ -546,12 +562,12 @@
           <div id="customList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
         </div>
 
-        <div class="hr"></div>
+        <div class="hr appViewBlock" data-view-block="missions"></div>
 
-        <div class="tasks" id="tasks"></div>
+        <div class="tasks appViewBlock" data-view-block="missions" id="tasks"></div>
 
-        <div style="margin-top:14px" class="mono">LOG</div>
-        <div class="log mono" id="log"></div>
+        <div class="mono appViewBlock" data-view-block="settings" style="margin-top:14px">LOG</div>
+        <div class="log mono appViewBlock" data-view-block="settings" id="log"></div>
       </div>
     </div>
   </section>
