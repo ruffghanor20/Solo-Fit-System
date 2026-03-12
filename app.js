@@ -27,6 +27,8 @@ const must = (id) => {
 let lastSnapshot = null;
 let debugOn = false;
 let pendingInvIconDataUrl = "";
+let currentView = "main";
+let storeFilter = "all";
 
 // ---------- storage helpers ----------
 function setTop(status){ const p = el("topPill"); if (p) p.textContent = status; }
@@ -59,8 +61,56 @@ function setGymParts(username, day, parts){
 }
 
 // ---------- view helpers ----------
-function showGame(){ must("authBox").style.display = "none"; must("gameBox").style.display = "block"; }
-function showAuth(){ must("authBox").style.display = "grid"; must("gameBox").style.display = "none"; }
+function showGame(){
+  must("authBox").style.display = "none";
+  must("gameBox").style.display = "block";
+  applyView();
+}
+function showAuth(){
+  must("authBox").style.display = "grid";
+  must("gameBox").style.display = "none";
+  const leftCard = el("leftCard");
+  const rightCard = el("rightCard");
+  if (leftCard) leftCard.style.display = "none";
+  if (rightCard) rightCard.style.display = "block";
+}
+
+function setMenuVisible(show){
+  const menu = el("viewMenu");
+  if (!menu) return;
+  menu.style.display = show ? "flex" : "none";
+}
+
+function applyView(){
+  const leftCard = el("leftCard");
+  const rightCard = el("rightCard");
+  const leftViews = ["main", "store"];
+  const rightViews = ["missions", "settings"];
+
+  if (leftCard) leftCard.style.display = leftViews.includes(currentView) ? "block" : "none";
+  if (rightCard) rightCard.style.display = rightViews.includes(currentView) ? "block" : "none";
+
+  document.querySelectorAll(".appViewBlock").forEach((node) => {
+    const blockView = node.getAttribute("data-view-block") || "main";
+    node.classList.toggle("viewHidden", blockView !== currentView);
+  });
+
+  document.querySelectorAll("#viewMenu [data-view]").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-view") === currentView);
+  });
+}
+
+function applyStoreFilterButtons(){
+  document.querySelectorAll("#storeSubMenu [data-store-filter]").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-store-filter") === storeFilter);
+  });
+}
+
+function getFilteredStore(store){
+  if (storeFilter === "equip") return (store || []).filter((it) => it?.type === "equip");
+  if (storeFilter === "consumables") return (store || []).filter((it) => it?.type !== "equip");
+  return store || [];
+}
 
 function toast(msg){
   const t = el("toast");
@@ -123,6 +173,8 @@ function ensureDebugPanel(){
   const panel = document.createElement("div");
   panel.id = "debugPanel";
   panel.className = "panel2";
+  panel.classList.add("appViewBlock");
+  panel.setAttribute("data-view-block", "settings");
   panel.style.marginBottom = "12px";
 
   panel.innerHTML = `
@@ -464,7 +516,7 @@ function renderStore(store, coins){
   const list = must("storeList");
   list.innerHTML = "";
 
-  for (const item of (store || [])) {
+  for (const item of getFilteredStore(store)) {
     const row = document.createElement("div");
     row.className = "storeItem";
     row.innerHTML = `
@@ -652,6 +704,8 @@ function ensureTrainingPanel(){
   const panel = document.createElement("div");
   panel.id = "trainingPanel";
   panel.className = "panel2";
+  panel.classList.add("appViewBlock");
+  panel.setAttribute("data-view-block", "missions");
   panel.style.marginBottom = "12px";
 
   panel.innerHTML = `
@@ -805,6 +859,8 @@ function renderState(s, username){
   renderCustomMissions(s);
   renderInventory(s);
   renderStore(s.store || [], s.profile.coins || 0);
+  applyStoreFilterButtons();
+  applyView();
 
   const list = el("tasks");
   list.innerHTML = "";
@@ -891,6 +947,8 @@ const doLogin = safeAsync(async () => {
 
   showGame();
   ensureDebugPanel();
+  setMenuVisible(true);
+  currentView = "main";
   await refresh();
 
   msg.textContent = "";
@@ -966,6 +1024,7 @@ function logout(){
   clearUser();
   lastSnapshot = null;
   setTop("offline");
+  setMenuVisible(false);
   showAuth();
   toast("Saiu.");
 }
@@ -986,12 +1045,29 @@ function wire(){
 
   const invPhoto = el("invPhoto");
   if (invPhoto) invPhoto.addEventListener("change", doInvPhotoPick);
+
+  document.querySelectorAll("#viewMenu [data-view]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentView = btn.getAttribute("data-view") || "main";
+      applyView();
+    });
+  });
+
+  document.querySelectorAll("#storeSubMenu [data-store-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      storeFilter = btn.getAttribute("data-store-filter") || "all";
+      applyStoreFilterButtons();
+      refresh().catch(console.error);
+    });
+  });
 }
 
 // ---------- boot ----------
 window.addEventListener("DOMContentLoaded", async () => {
   wire();
   setTop("offline");
+  setMenuVisible(false);
+  applyStoreFilterButtons();
 
   const sel = must("customAttr");
   sel.innerHTML = "";
@@ -1009,6 +1085,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (t && u) {
     showGame();
     ensureDebugPanel();
+    setMenuVisible(true);
+    currentView = "main";
     try { await refresh(); }
     catch (e) { console.error(e); logout(); }
   } else {
